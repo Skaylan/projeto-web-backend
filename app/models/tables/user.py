@@ -18,9 +18,9 @@ class User(db.Model):
         nome: str,
         username: str,
         email: str,
-        password_hash: str,
+        password_hash: str
     ):
         self.nome = nome,
         self.username = username,
-        self.username = email,
+        self.email = email,
         self.password_hash = password_hash
