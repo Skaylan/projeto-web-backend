@@ -7,17 +7,14 @@ class Category(db.Model):
     nome = db.Column(db.String(45), unique=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DataTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    categorycol = db.Column(db.String(45), unique=True, nullable=False)
-
+  
     def __init__(
         self,
         nome: str,
-        categorycol: str 
     ) :
-        self.nome = nome
-        self.categorycol = categorycol
-    
-    
+        self.nome = nome 
+
+
 
 
 
