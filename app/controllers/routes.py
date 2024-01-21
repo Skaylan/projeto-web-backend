@@ -4,6 +4,8 @@ from app.config.app_config import *
 from flask import jsonify
 from app.models.schema.user_schema import UserSchema
 from app.models.tables.user import User
+from app.models.tables.category import Category
+
 
 @app.route('/api/v1/get_users', methods=["GET"])
 def get_users():
@@ -14,4 +16,3 @@ def get_users():
     return jsonify({
         'users': payload
     }), 200
-    

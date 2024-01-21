@@ -9,8 +9,8 @@ class User(db.Model):
     username = db.Column(db.String(45), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.Text, unique=False, nullable=False)
-    created_at = db.Column(db.DataTime, defaut=datetime.now())
-    updated_at = db.Column(db.DataTime, defaut=datetime.now())
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
     def __ini__(
