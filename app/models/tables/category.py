@@ -7,7 +7,7 @@ from uuid import uuid4
 
 
 class Category(db.Model):
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=str(uuid4()))
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
     name: Mapped[str] = mapped_column(String(45), unique=True, nullable=False)
     created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
