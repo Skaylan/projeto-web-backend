@@ -12,13 +12,26 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 @app.route('/api/v1/get_users', methods=["GET"])
 def get_users():
-    users = User.query.all()
-    user_schema = UserSchema(many=True)
-    payload = user_schema.dump(users)
-    
-    return jsonify({
-        'users': payload
-    }), 200
+    try:
+        users = User.query.all()
+        user_schema = UserSchema(many=True)
+        payload = user_schema.dump(users)
+        
+        return jsonify({
+            'users': payload
+        }), 200
+        
+    except Exception as error:
+        print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        return jsonify({
+                'status': 'error',
+                'message': 'An error has occurred!',
+                'error_class': str(error.__class__),
+                'error_cause': str(error.__cause__)
+            }), 500
     
     
 @app.route('/api/v1/create_user', methods=['POST'])
