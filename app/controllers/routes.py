@@ -36,7 +36,7 @@ def create_user():
             if password != re_password:
                 return jsonify({
                     'status': 'error',
-                    "message": 'Senhas não coencidem'
+                    'message': 'Senhas não coencidem'
                 }), 400
             
             password_hash = generate_password_hash(password)
@@ -96,10 +96,23 @@ def add_category():
 
 @app.route('/api/v1/get_categories', methods=["GET"])
 def get_categories():
-    categories = Category.query.all()
-    category_schema = CategorySchema(many=True)
-    payload = category_schema.dump(categories)
-    
-    return jsonify({
-        'categories': payload
-    }), 200              
+    try:
+        categories = Category.query.all()
+        category_schema = CategorySchema(many=True)
+        payload = category_schema.dump(categories)
+        
+        return jsonify({
+            'categories': payload
+        }), 200
+        
+    except Exception as error:
+        print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        return jsonify({
+                'status': 'error',
+                'message': 'An error has occurred!',
+                'error_class': str(error.__class__),
+                'error_cause': str(error.__cause__)
+            }), 500                                
