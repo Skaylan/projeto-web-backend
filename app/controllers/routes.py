@@ -43,6 +43,7 @@ def create_user():
             user = User(name=name, username=username, email=email, password_hash=password_hash)
             db.session.add(user)
             db.session.commit()
+            db.session.close()
             
             return jsonify({
                 'status': 'ok',
