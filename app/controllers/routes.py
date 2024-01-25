@@ -32,6 +32,37 @@ def get_users():
                 'error_class': str(error.__class__),
                 'error_cause': str(error.__cause__)
             }), 500
+
+@app.route('/api/v1/get_one_user', methods=['GET'])
+def get_one_user():
+    try:
+        username = request.args.get('username')
+        user = User.query.filter_by(username=username).first()
+        user_schema = UserSchema()
+        payload = user_schema.dump(user)
+        
+        if user == None:
+            return jsonify({
+                'status': 'error',
+                'mesage': 'usuario não existe!'
+            }), 404
+            
+        return jsonify({
+            'status': 'ok',
+            'user': payload
+        }), 200
+        
+    except Exception as error:
+        print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        return jsonify({
+                'status': 'error',
+                'message': 'An error has occurred!',
+                'error_class': str(error.__class__),
+                'error_cause': str(error.__cause__)
+            }), 500
     
     
 @app.route('/api/v1/create_user', methods=['POST'])
@@ -76,6 +107,50 @@ def create_user():
                     'error_cause': str(error.__cause__)
                 }), 500
             
+
+@app.route('/api/v1/delete_user', methods=['DELETE'])
+def delete_user():
+    if request.method == 'DELETE':
+        try:
+            body = dict(request.get_json())
+            username = body.get('username')
+            password = body.get('password')
+            
+            user = User.query.filter_by(username=username).first()
+
+            if user == None:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'usuario não existe!'
+                }), 404
+            
+            checked_password = check_password_hash(user.password_hash, password)
+            if checked_password:
+                db.session.delete(user)
+                db.session.commit()            
+                db.session.close()            
+
+                return jsonify({
+                    'status': 'ok',
+                    'message': 'usuario deletado com sucesso!'
+                }), 200
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Senha incorreta!'
+                }), 401
+                
+        except Exception as error:
+            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            return jsonify({
+                    'status': 'error',
+                    'message': 'An error has occurred!',
+                    'error_class': str(error.__class__),
+                    'error_cause': str(error.__cause__)
+                }), 500
 
 @app.route('/api/v1/add_category', methods=['POST'])
 def add_category():
