@@ -48,7 +48,13 @@ def test_delete_user():
     
     get_user_response = get_one_user(payload.get('username'))
     assert get_user_response.status_code == 404
-    
+
+
+def test_get_users():
+    get_many_users_response = get_many_users()
+    assert get_many_users_response.status_code == 200
+    users_object = get_many_users_response.json()
+    assert str(type(users_object)) == "<class 'dict'>"
 
     
 def create_user(payload: dict) -> Response:
@@ -59,3 +65,6 @@ def delete_user(payload: dict) -> Response:
 
 def get_one_user(username: str) -> Response:
     return requests.get(ENDPOINT + '/get_one_user', params={'username': username})
+
+def get_many_users() -> Response:
+    return requests.get(ENDPOINT + '/get_users')
