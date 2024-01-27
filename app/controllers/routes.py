@@ -286,3 +286,40 @@ def delete_category():
                 'error_class': str(error.__class__),
                 'error_cause': str(error.__cause__)
             }), 500
+        
+
+@app.route('/api/v1/get_one_category', methods=['GET'])
+def get_one_category():
+    if request.method == 'GET':
+        try:
+            name = request.args.get('name')
+
+            one_category = Category.query.filter_by(name=name).first()
+
+            if one_category == None:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Categoria não encontrada!'
+                }),404
+            
+            category_schema = CategorySchema()
+            payload = category_schema.dump(one_category)
+
+            return jsonify({
+                'status': 'ok',
+                'category': payload
+            }),200
+        
+        except Exception as error:
+            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            return jsonify({
+                'status': 'error',
+                'message': 'An error has occurred!',
+                'error_class': str(error.__class__),
+                'error_cause': str(error.__cause__)
+            }), 500
+        
+
