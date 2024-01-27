@@ -79,7 +79,30 @@ def test_get_one_user():
     }
     delete_user_response = delete_user(payload=delete_user_payload)
     assert delete_user_response.status_code == 200
+
+
+def test_delete_category():
+    payload = {
+        'name': 'testename'
+    }
+
+    create_category_response = create_category(payload)
+    assert create_category_response.status_code == 201
     
+    get_one_category_response = get_one_category(payload.get('name'))
+    assert get_one_category_response.status_code == 200
+    body = get_one_category_response.json()
+    assert body.get('category').get('name') == payload.get('name')
+
+    id = body.get('category').get('id')
+    delete_payload = {
+        'id': id
+    } 
+    delete_category_response = delete_category(delete_payload)
+    assert delete_category_response.status_code == 200
+    
+    get_one_category_response = get_one_category(payload.get('name'))
+    assert get_one_category_response.status_code == 404
 
 
 def create_user(payload: dict) -> Response:
@@ -93,3 +116,12 @@ def get_one_user(username: str) -> Response:
 
 def get_many_users() -> Response:
     return requests.get(ENDPOINT + '/get_users')
+
+def create_category(payload: dict) -> Response:
+    return requests.post(ENDPOINT + '/add_category', json=payload)
+
+def delete_category(payload: dict) -> Response:
+    return requests.delete(ENDPOINT + '/delete_category', json=payload)
+
+def get_one_category(name: str) -> Response:
+    return requests.get(ENDPOINT + '/get_one_category', params={'name': name})
