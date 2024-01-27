@@ -249,3 +249,40 @@ def edit_category():
                 'error_class': str(error.__class__),
                 'error_cause': str(error.__cause__)
             }), 500
+        
+
+@app.route('/api/v1/delete_category', methods=['DELETE'])
+def delete_category():
+    if request.method == 'DELETE':
+        try:
+            body = request.get_json()
+            id = body.get('id')
+
+            category = Category.query.filter_by(id=id).first()
+
+            if category == None:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Categoria não encotrada'
+                }),404
+            
+            db.session.delete(category)
+            db.session.commit()
+            db.session.close()
+
+            return jsonify({
+                'status': 'ok',
+                'message': 'Categoria deletada com sucesso!'
+            }),200
+
+        except Exception as error:
+            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            return jsonify({
+                'status': 'error',
+                'message': 'An error has occurred!',
+                'error_class': str(error.__class__),
+                'error_cause': str(error.__cause__)
+            }), 500
