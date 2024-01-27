@@ -1,3 +1,4 @@
+import os
 import sys
 from app import app
 from flask import jsonify, request
@@ -8,6 +9,7 @@ from app.models.tables.category import Category
 from app.models.schemas.user_schema import UserSchema
 from app.models.schemas.category_schema import CategorySchema
 from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
 
 
 @app.route('/api/v1/get_users', methods=["GET"])
@@ -249,6 +251,53 @@ def edit_category():
                 'error_class': str(error.__class__),
                 'error_cause': str(error.__cause__)
             }), 500
+
+
+@app.route('/api/v1/authenticate', methods=['POST'])
+def authenticate():
+    if request.method == 'POST':
+        try:
+            body = request.get_json()
+            email = body.get('email')
+            password = body.get('password')
+                    
+            user = User.query.filter_by(email=email).first()
+            
+            if user == None:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'usuario com email {email} não existe!'
+                }), 404
+            
+            checked_pass = check_password_hash(user.password_hash, password)
+            
+            if checked_pass:
+                secret_key = os.getenv('SECRET_KEY')
+                auth_token = jwt.encode({'email': user.email, 'user_id': user.id}, secret_key)
+                
+                return jsonify({
+                    'status': 'ok',
+                    'message': 'usuario autenticado com sucesso!',
+                    'token': auth_token
+                }), 200
+                
+            else:
+                return jsonify({
+                    "status": 'error',
+                    'message': 'Senha incorreta!'
+                }), 400
+        except Exception as error:
+            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            return jsonify({
+                'status': 'error',
+                'message': 'An error has occurred!',
+                'error_class': str(error.__class__),
+                'error_cause': str(error.__cause__)
+            }), 500
+                
         
 
 @app.route('/api/v1/delete_category', methods=['DELETE'])
