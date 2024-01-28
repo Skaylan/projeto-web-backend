@@ -6,4 +6,4 @@ from app.models.tables.category import Category
 class CategorySchema(ma.SQLAlchemyAutoSchema):
     class Meta: 
         model = Category 
-        load_intance = True
+        load_instance = True
