@@ -52,6 +52,4 @@ class Base(db.Model):
 
     id = db.Column(GUID(), primary_key=True, default=lambda: str(uuid.uuid4()))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime,
-                    default=datetime.utcnow,
-                    onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
