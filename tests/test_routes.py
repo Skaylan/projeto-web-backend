@@ -1,8 +1,10 @@
 import requests
 from requests import Response
+import jwt
+import os
 
 ENDPOINT = 'http://localhost:5000/api/v1'
-
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 def test_create_user():
     payload = {
@@ -162,6 +164,40 @@ def test_edit_category():
 
     delete_category_response = delete_category(delete)
     assert delete_category_response.status_code == 200
+def test_authenticate():
+    payload = {
+        'name': 'test_name',
+        'username': 'test_username',
+        'email': 'test_email@email.com',
+        'password': 'testpassword',
+        're_password': 'testpassword',
+    }
+    
+    create_response = create_user(payload=payload)
+    assert create_response.status_code == 201
+    
+    auth_payload = {
+        'email': payload.get('email'),
+        'password': payload.get('password')
+    }
+    
+    authenticate_reponse = authenticate(payload=auth_payload)
+    assert authenticate_reponse.status_code == 200
+    
+    delete_payload = {
+        'username': payload.get('username'),
+        'password': payload.get('password')
+    }
+    
+    delete_user_response = delete_user(payload=delete_payload)
+    assert delete_user_response.status_code == 200
+    
+    get_user_response = get_one_user(username=payload.get('username'))
+    assert get_user_response.status_code == 404
+    get_user_body = get_user_response.json()
+    assert get_user_body.get('user') == None
+
+
 
 
 def create_user(payload: dict) -> Response:
@@ -190,3 +226,6 @@ def get_one_category(name: str) -> Response:
 
 def edit_category(payload: dict) -> Response:
     return requests.put(ENDPOINT + '/edit_category', json=payload)
+
+def authenticate(payload: dict) -> Response:
+    return requests.post(ENDPOINT + '/authenticate', json=payload)
