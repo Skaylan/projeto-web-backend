@@ -40,8 +40,8 @@ def get_users():
 @app.route('/api/v1/get_one_user', methods=['GET'])
 def get_one_user():
     try:
-        username = request.args.get('username')
-        user = User.query.filter_by(username=username).first()
+        email = request.args.get('email')
+        user = User.query.filter_by(email=email).first()
         user_schema = UserSchema()
         payload = user_schema.dump(user)
         
@@ -73,7 +73,7 @@ def get_one_user():
 def create_user():
     if request.method == 'POST':
         try:
-            body = dict(request.get_json())
+            body = request.get_json()
             name = body['name']
             username = body['username']
             email = body['email']
