@@ -193,7 +193,7 @@ def add_movie():
             return jsonify({
                 'status': 'ok',
                 'message': 'filme adicionado com sucesso!'
-            })
+            }),201
             
         except Exception as error:
             print(f'error class: {error.__class__} | error cause: {error.__cause__}')
@@ -448,6 +448,81 @@ def get_movies():
                     'message': 'An error has occurred!',
                     'error_class': str(error.__class__),
                     'error_cause': str(error.__cause__)
-                }), 500 
+                }), 500
+        
 
+@app.route('/api/v1/get_one_movie', methods=['GET'])
+def get_one_movie():
+    if request.method == 'GET':
+        try:
+            title = request.args.get('title')
+            studio = request.args.get('studio')
 
+            if title != None and studio != None:
+                movie = Movie.query.filter_by(title=title).filter_by(studio=studio).first()
+                
+                if movie == None:
+                    return jsonify({
+                        'status': 'error',
+                        'message': 'Filme não encontrado!'
+                    }),404
+
+                movie_schema = MovieSchema()
+                payload = movie_schema.dump(movie)
+
+                return jsonify({
+                    'status': 'ok',
+                    'movie': payload
+                }),200
+
+        except Exception as error:
+            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            return jsonify({
+                'status': 'error',
+                'message': 'An error has occurred!',
+                'error_class': str(error.__class__),
+                'error_cause': str(error.__cause__)
+            }), 500
+        
+
+@app.route('/api/v1/delete_movie', methods=['DELETE'])
+def delete_movie():
+    try:
+        if request.method == 'DELETE':
+
+            body = request.get_json()
+            id = body.get('id')
+
+            movie = Movie.query.filter_by(id=id).first()
+
+            if movie == None:
+                return jsonify({
+                    'status': 'error',
+                    'massage': 'Filme não encontrado!'
+                }),404
+            
+            db.session.delete(movie)
+            db.session.commit()
+            db.session.close()
+
+            return jsonify({
+                'status': 'ok',
+                'message': 'Filme deletado com sucesso!'
+            }),200
+
+    except Exception as error:
+        print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        return jsonify({
+                'status': 'error',
+                'message': 'An error has occurred!',
+                'error_class': str(error.__class__),
+                'error_cause': str(error.__cause__)
+            }), 500
+
+        
