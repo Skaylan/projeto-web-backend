@@ -10,7 +10,7 @@ class Movie(Base):
     original_title: Mapped[str] = mapped_column(Text, unique=False, nullable=False)
     romanised_original_title: Mapped[str] = mapped_column(Text, unique=False, nullable=False)
     description: Mapped[str] = mapped_column(Text, unique=False, nullable=False) 
-    studio: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    studio: Mapped[str] = mapped_column(String(100), unique=False, nullable=False)
     director: Mapped[str] = mapped_column(String(100), unique=False, nullable=False)
     producer: Mapped[str] = mapped_column(String(100), unique=False, nullable=False) 
     rating: Mapped[Double] = mapped_column(Double, unique=False, nullable=False) 
@@ -23,7 +23,7 @@ class Movie(Base):
 
     def __init__(self, title: str, original_title: str, romanised_original_title: str,
                  description: str, studio: str, director: str, rating: Double,
-                 banner_img_id: str, launch_date: str, cover_img_id: str, producer: str,
+                 banner_img_id: str, launch_date: str, poster_img_id: str, producer: str,
                  running_time: int, category_id: str
                  ):
         self.title = title
@@ -35,7 +35,7 @@ class Movie(Base):
         self.rating = rating
         self.banner_img_id = banner_img_id
         self.launch_date = launch_date
-        self.cover_img_id = cover_img_id
+        self.poster_img_id = poster_img_id
         self.producer = producer
         self.running_time = running_time
         self.category_id = category_id
