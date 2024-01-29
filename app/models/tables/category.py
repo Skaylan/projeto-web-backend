@@ -12,7 +12,6 @@ class Category(db.Model):
     name: Mapped[str] = mapped_column(String(45), unique=True, nullable=False)
     created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-
     movies = relationship('Movie', backref='category') 
     
     def __init__(self, name:str):

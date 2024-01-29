@@ -5,6 +5,7 @@ from flask import jsonify, request
 from app.config.db_config import *
 from app.config.app_config import *
 from app.models.tables.user import User
+from app.models.tables.movie import Movie
 from app.models.tables.category import Category
 from app.models.schemas.user_schema import UserSchema
 from app.models.schemas.category_schema import CategorySchema
@@ -153,6 +154,58 @@ def delete_user():
                     'error_class': str(error.__class__),
                     'error_cause': str(error.__cause__)
                 }), 500
+
+
+@app.route('/api/v1/add_movie', methods=['POST'])
+def add_movie():
+    if request.method == 'POST':
+        try:
+            body = request.get_json()
+            title = body.get('title')
+            original_title = body.get('original_title')
+            romanized_original_title = body.get('romanized_original_title')
+            description = body.get('description')
+            studio = body.get('studio')
+            director = body.get('director')
+            producer = body.get('producer')
+            rating = body.get('rating')
+            banner_img_id = body.get('banner_img_id')
+            poster_img_id = body.get('poster_img_id')
+            launch_date = body.get('launch_date')
+            running_time = body.get('running_time')
+            category_id = body.get('category_id')
+            
+            movie = Movie(
+                title=title, original_title=original_title,
+                romanised_original_title=romanized_original_title,
+                description=description, studio=studio,
+                director=director, producer=producer,
+                rating=rating, banner_img_id=banner_img_id,
+                poster_img_id=poster_img_id, launch_date=launch_date,
+                running_time=running_time, category_id=category_id
+            )
+            
+            db.session.add(movie)
+            db.session.commit()
+            db.session.close()
+            
+            return jsonify({
+                'status': 'ok',
+                'message': 'filme adicionado com sucesso!'
+            })
+            
+        except Exception as error:
+            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            return jsonify({
+                    'status': 'error',
+                    'message': 'An error has occurred!',
+                    'error_class': str(error.__class__),
+                    'error_cause': str(error.__cause__)
+                }), 500
+
 
 @app.route('/api/v1/add_category', methods=['POST'])
 def add_category():
