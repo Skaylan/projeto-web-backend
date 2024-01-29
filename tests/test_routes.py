@@ -164,6 +164,8 @@ def test_edit_category():
 
     delete_category_response = delete_category(delete)
     assert delete_category_response.status_code == 200
+
+
 def test_authenticate():
     payload = {
         'name': 'test_name',
@@ -198,6 +200,41 @@ def test_authenticate():
     assert get_user_body.get('user') == None
 
 
+def test_get_movies():
+    payload = {
+        "title": "title test",
+        "original_title": "original title test",
+        "romanized_original_title": "romanized title test",
+        "description": "description test",
+        "studio": "studio test",
+        "director": "director test",
+        "producer": "producer test",
+        "rating": 10,
+        "banner_img_id": "banner img id test",
+        "poster_img_id": "poster img id test",
+        "launch_date": "1999",
+        "running_time": 102,
+        "category_id": "54ab4156-c706-49d7-b6c7-4142126b20e4"
+    }
+
+    add_movie_reponse = add_movie(payload=payload)
+    assert add_movie_reponse.status_code == 201
+
+    get_one_movie_reponse = get_one_movie(payload.get('title'), payload.get('studio'))
+    assert get_one_movie_reponse.status_code == 200
+    movie = get_one_movie_reponse.json()
+    assert movie.get('movie').get('title') == payload.get('title')
+    assert movie.get('movie').get('studio') == payload.get('studio')
+
+    delete = {
+        'id': movie.get('movie').get('id')
+    }
+
+    delete_movie_response = delete_movie(delete)
+    assert delete_movie_response.status_code == 200
+
+    get_one_movie_reponse = get_one_movie(payload.get('title'), payload.get('studio'))
+    assert get_one_movie_reponse.status_code == 404
 
 
 def create_user(payload: dict) -> Response:
@@ -229,3 +266,15 @@ def edit_category(payload: dict) -> Response:
 
 def authenticate(payload: dict) -> Response:
     return requests.post(ENDPOINT + '/authenticate', json=payload)
+
+def add_movie(payload:dict) -> Response:
+    return requests.post(ENDPOINT + '/add_movie', json=payload)
+
+def get_movies() -> Response:
+    return requests.get(ENDPOINT + '/get_movies')
+
+def get_one_movie(title: str, studio: str) -> Response:
+    return requests.get(ENDPOINT + '/get_one_movie', params={'title': title, 'studio': studio})
+
+def delete_movie(payload: dict) -> Response:
+    return requests.delete(ENDPOINT + '/delete_movie', json=payload)
