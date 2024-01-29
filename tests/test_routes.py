@@ -48,7 +48,7 @@ def test_delete_user():
     delete_user_response = delete_user(delete_payload)
     assert delete_user_response.status_code == 200
     
-    get_user_response = get_one_user(payload.get('username'))
+    get_user_response = get_one_user(payload.get('email'))
     assert get_user_response.status_code == 404
 
 
@@ -70,10 +70,10 @@ def test_get_one_user():
     create_user_response = create_user(payload=payload)
     assert create_user_response.status_code == 201
     
-    get_one_user_response = get_one_user(username=payload.get('username'))
+    get_one_user_response = get_one_user(email=payload.get('email'))
     assert get_one_user_response.status_code == 200
     user_data = get_one_user_response.json()
-    assert user_data.get('user').get('username') == payload.get('username')
+    assert user_data.get('user').get('email') == payload.get('email')
     
     delete_user_payload = {
         'username': payload.get('username'),
@@ -164,6 +164,8 @@ def test_edit_category():
 
     delete_category_response = delete_category(delete)
     assert delete_category_response.status_code == 200
+    
+    
 def test_authenticate():
     payload = {
         'name': 'test_name',
@@ -192,7 +194,7 @@ def test_authenticate():
     delete_user_response = delete_user(payload=delete_payload)
     assert delete_user_response.status_code == 200
     
-    get_user_response = get_one_user(username=payload.get('username'))
+    get_user_response = get_one_user(email=payload.get('email'))
     assert get_user_response.status_code == 404
     get_user_body = get_user_response.json()
     assert get_user_body.get('user') == None
@@ -206,8 +208,8 @@ def create_user(payload: dict) -> Response:
 def delete_user(payload: dict) -> Response:
     return requests.delete(ENDPOINT + '/delete_user', json=payload)
 
-def get_one_user(username: str) -> Response:
-    return requests.get(ENDPOINT + '/get_one_user', params={'username': username})
+def get_one_user(email: str) -> Response:
+    return requests.get(ENDPOINT + '/get_one_user', params={'email': email})
 
 def get_many_users() -> Response:
     return requests.get(ENDPOINT + '/get_users')
