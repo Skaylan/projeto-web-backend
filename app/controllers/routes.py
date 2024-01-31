@@ -552,7 +552,7 @@ def edit_movie():
                 return jsonify({
                     'status': 'error',
                     'message': 'Filme não encontrado'
-                }),400
+                }), 404
             
             movie.title = new_title
             movie.original_title = new_original_title
@@ -568,7 +568,6 @@ def edit_movie():
             movie.running_time = new_running_time
             movie.category_id = new_category_id
 
-            db.session.add(movie)
             db.session.commit()
             db.session.close()
 
