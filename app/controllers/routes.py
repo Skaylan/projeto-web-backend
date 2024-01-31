@@ -525,4 +525,65 @@ def delete_movie():
                 'error_cause': str(error.__cause__)
             }), 500
 
+
+@app.route('/api/v1/edit_movie', methods=['PUT'])
+def edit_movie():
+    if request.method == 'PUT':
+        try:
+            body = dict(request.get_json())
+            movie_id = body.get('id')
+            new_title = body.get('title')
+            new_original_title = body.get('original_title')
+            new_romanised_original_title = body.get('romanised_original_title')
+            new_description = body.get('description')
+            new_studio = body.get('studio')
+            new_director = body.get('director')
+            new_producer = body.get('producer')
+            new_rating = body.get('rating')
+            new_banner_img_id = body.get('banner_img_id')
+            new_poster_img_id = body.get('poster_img_id')
+            new_launch_date = body.get('launch_date')
+            new_running_time = body.get('running_time')
+            new_category_id = body.get('category_id')
+
+            movie = Movie.query.filter_by(id=movie_id).first()
+
+            if movie == None:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Filme não encontrado'
+                }), 404
+            
+            movie.title = new_title
+            movie.original_title = new_original_title
+            movie.romanised_original_title = new_romanised_original_title
+            movie.description = new_description
+            movie.studio = new_studio
+            movie.director = new_director
+            movie.producer = new_producer
+            movie.rating = new_rating
+            movie.banner_img_id = new_banner_img_id
+            movie.poster_img_id = new_poster_img_id
+            movie.launch_date = new_launch_date
+            movie.running_time = new_running_time
+            movie.category_id = new_category_id
+
+            db.session.commit()
+            db.session.close()
+
+            return jsonify({
+                'status': 'ok',
+                'message': 'Categoria modificada com sucesso'
+            }),200
         
+        except Exception as error:
+                print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                print(exc_type, fname, exc_tb.tb_lineno)
+                return jsonify({
+                    'status': 'error',
+                    'message': 'An error has occurred!',
+                    'error_class': str(error.__class__),
+                    'error_cause': str(error.__cause__)
+                }),500
