@@ -1,6 +1,7 @@
 from app.config.app_config import *
 from app.config.db_config import *
-from sqlalchemy.orm import Mapped, mapped_column
+from app.models.tables.liked import Liked
+from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 from sqlalchemy import String, Text, Integer, Double, ForeignKey
 from uuid import uuid4 
 
@@ -19,6 +20,7 @@ class Movie(Base):
     launch_date: Mapped[str] = mapped_column(String(45), unique=False, nullable=False)
     running_time: Mapped[int] = mapped_column(Integer, unique=True, nullable=False) 
     category_id: Mapped[str] = mapped_column(String, ForeignKey("category.id"), unique=False, nullable=False) 
+    liked = relationship('Liked', backref='movie') 
 
 
     def __init__(self, title: str, original_title: str, romanised_original_title: str,
