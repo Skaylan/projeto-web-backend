@@ -1,7 +1,8 @@
 from app.config.app_config import *
 from app.config.db_config import *
+from app.models.tables.liked import Liked
 from datetime import datetime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 from sqlalchemy import String, Text
 from uuid import uuid4
 
@@ -12,6 +13,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(320), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(Text, unique=False, nullable=False)
+    liked = relationship('Liked', backref='user') 
     
     def __init__(self, name:str, username:str, email:str, password_hash:str):
         self.name = name

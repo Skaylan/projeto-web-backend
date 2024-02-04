@@ -3,7 +3,7 @@ from app.config.db_config import *
 from app.models.tables.movie import Movie
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
-from sqlalchemy import String, Integer, DateTime, Text
+from sqlalchemy import String, DateTime
 from uuid import uuid4
 
 

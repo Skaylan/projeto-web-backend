@@ -6,6 +6,7 @@ from app.config.db_config import *
 from app.config.app_config import *
 from app.models.tables.user import User
 from app.models.tables.movie import Movie
+from app.models.tables.liked import Liked
 from app.models.tables.category import Category
 from app.models.schemas.user_schema import UserSchema
 from app.models.schemas.category_schema import CategorySchema
@@ -576,6 +577,37 @@ def edit_movie():
                 'message': 'Categoria modificada com sucesso'
             }),200
         
+        except Exception as error:
+                print(f'error class: {error.__class__} | error cause: {error.__cause__}')
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                print(exc_type, fname, exc_tb.tb_lineno)
+                return jsonify({
+                    'status': 'error',
+                    'message': 'An error has occurred!',
+                    'error_class': str(error.__class__),
+                    'error_cause': str(error.__cause__)
+                }),500
+                
+@app.route('/api/v1/like_movie', methods=['POST'])
+def like_movie():
+    if request.method == 'POST':
+        try:
+            body = request.get_json()
+            user_id = body.get('user_id')
+            movie_id = body.get('movie_id')
+            
+            liked = Liked(user_id=user_id, movie_id=movie_id)
+            
+            db.session.add(liked)
+            db.session.commit()
+            db.session.close()
+            
+            return jsonify({
+                'status': 'ok',
+                'message': 'filme curtido com sucesso!',
+            }), 200
+            
         except Exception as error:
                 print(f'error class: {error.__class__} | error cause: {error.__cause__}')
                 exc_type, exc_obj, exc_tb = sys.exc_info()
