@@ -22,6 +22,12 @@ def test_authenticate():
     authenticate_reponse = authenticate(payload=auth_payload)
     assert authenticate_reponse.status_code == 200
     
+    
+    auth_user_body = authenticate_reponse.json()
+    auth_token = auth_user_body.get('token')
+    logout_user_response = logout({'token': auth_token})
+    assert logout_user_response.status_code == 200
+    
     delete_payload = {
         'username': payload.get('username'),
         'password': payload.get('password')
