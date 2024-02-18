@@ -8,6 +8,8 @@ from app.models.tables.user import User
 from app.models.tables.movie import Movie
 from app.models.tables.liked import Liked
 from app.models.tables.category import Category
+from app.models.tables.session import Session
+from app.controllers.utils.functions import print_error_details
 from app.models.schemas.user_schema import UserSchema
 from app.models.schemas.category_schema import CategorySchema
 from app.models.schemas.movie_schema import MovieSchema
@@ -27,10 +29,7 @@ def get_users():
         }), 200
         
     except Exception as error:
-        print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print(exc_type, fname, exc_tb.tb_lineno)
+        print_error_details(error)
         return jsonify({
                 'status': 'error',
                 'message': 'An error has occurred!',
@@ -58,10 +57,7 @@ def get_one_user():
         }), 200
         
     except Exception as error:
-        print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print(exc_type, fname, exc_tb.tb_lineno)
+        print_error_details(error)
         return jsonify({
                 'status': 'error',
                 'message': 'An error has occurred!',
@@ -101,10 +97,7 @@ def create_user():
             }), 201
             
         except Exception as error:
-            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+            print_error_details(error)
             return jsonify({
                     'status': 'error',
                     'message': 'An error has occurred!',
@@ -146,10 +139,7 @@ def delete_user():
                 }), 401
                 
         except Exception as error:
-            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+            print_error_details(error)
             return jsonify({
                     'status': 'error',
                     'message': 'An error has occurred!',
@@ -197,10 +187,7 @@ def add_movie():
             }),201
             
         except Exception as error:
-            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+            print_error_details(error)
             return jsonify({
                     'status': 'error',
                     'message': 'An error has occurred!',
@@ -227,10 +214,7 @@ def add_category():
             }), 201       
 
         except Exception as error:
-            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+            print_error_details(error)
             return jsonify({
                     'status': 'error',
                     'message': 'An error has occurred!',
@@ -251,10 +235,7 @@ def get_categories():
         }), 200
         
     except Exception as error:
-        print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print(exc_type, fname, exc_tb.tb_lineno)
+        print_error_details(error)
         return jsonify({
                 'status': 'error',
                 'message': 'An error has occurred!',
@@ -296,10 +277,7 @@ def edit_category():
             }), 200
 
         except Exception as error:
-            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+            print_error_details(error)
             return jsonify({
                 'status': 'error',
                 'message': 'An error has occurred!',
@@ -330,6 +308,10 @@ def authenticate():
                 secret_key = os.getenv('SECRET_KEY')
                 auth_token = jwt.encode({'email': user.email, 'user_id': user.id}, secret_key)
                 
+                new_session = Session(session_token=auth_token, user_id=user.id)
+                db.session.add(new_session)
+                db.session.commit()
+                
                 return jsonify({
                     'status': 'ok',
                     'message': 'usuario autenticado com sucesso!',
@@ -342,10 +324,7 @@ def authenticate():
                     'message': 'Senha incorreta!'
                 }), 400
         except Exception as error:
-            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+            print_error_details(error)
             return jsonify({
                 'status': 'error',
                 'message': 'An error has occurred!',
@@ -353,6 +332,44 @@ def authenticate():
                 'error_cause': str(error.__cause__)
             }), 500
                 
+
+@app.route('/api/v1/logout', methods=['POST'])
+def logout():
+    if request.method == 'POST':
+        try:
+            body = request.get_json()
+
+            if 'token' not in body:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Token de autorização ausente!'
+                }), 401
+
+            token = body.get('token')
+            session = Session.query.filter_by(session_token=token).first()
+
+            if session is None:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Token de sessão inválido!'
+                }), 401
+
+            db.session.delete(session)
+            db.session.commit()
+
+            return jsonify({
+                'status': 'ok',
+                'message': 'Usuário desconectado com sucesso!'
+            }), 200
+
+        except Exception as error:
+            print_error_details(error)
+            return jsonify({
+                'status': 'error',
+                'message': 'Ocorreu um erro!',
+                'error_class': str(error.__class__),
+                'error_cause': str(error.__cause__)
+            }), 500
         
 
 @app.route('/api/v1/delete_category', methods=['DELETE'])
@@ -380,10 +397,7 @@ def delete_category():
             }),200
 
         except Exception as error:
-            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+            print_error_details(error)
             return jsonify({
                 'status': 'error',
                 'message': 'An error has occurred!',
@@ -415,10 +429,7 @@ def get_one_category():
             }),200
         
         except Exception as error:
-            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+            print_error_details(error)
             return jsonify({
                 'status': 'error',
                 'message': 'An error has occurred!',
@@ -440,10 +451,7 @@ def get_movies():
             }), 200
 
         except Exception as error:
-            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+            print_error_details(error)
             return jsonify({
                     'status': 'error',
                     'message': 'An error has occurred!',
@@ -477,10 +485,7 @@ def get_one_movie():
                 }),200
 
         except Exception as error:
-            print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+            print_error_details(error)
             return jsonify({
                 'status': 'error',
                 'message': 'An error has occurred!',
@@ -515,10 +520,7 @@ def delete_movie():
             }),200
 
     except Exception as error:
-        print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print(exc_type, fname, exc_tb.tb_lineno)
+        print_error_details(error)
         return jsonify({
                 'status': 'error',
                 'message': 'An error has occurred!',
@@ -578,10 +580,7 @@ def edit_movie():
             }),200
         
         except Exception as error:
-                print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                print(exc_type, fname, exc_tb.tb_lineno)
+                print_error_details(error)
                 return jsonify({
                     'status': 'error',
                     'message': 'An error has occurred!',
@@ -609,10 +608,7 @@ def like_movie():
             }), 200
             
         except Exception as error:
-                print(f'error class: {error.__class__} | error cause: {error.__cause__}')
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                print(exc_type, fname, exc_tb.tb_lineno)
+                print_error_details(error)
                 return jsonify({
                     'status': 'error',
                     'message': 'An error has occurred!',
