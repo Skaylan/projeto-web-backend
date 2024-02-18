@@ -1,5 +1,4 @@
-from app.config.app_config import *
-from app.config.db_config import *
+from app.extensions import ma
 from app.models.tables.liked import Liked
 from app.models.schemas.user_schema import UserSchema
 from app.models.schemas.movie_schema import MovieSchema

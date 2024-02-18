@@ -49,3 +49,6 @@ def delete_movie(payload: dict) -> Response:
 
 def edit_movie(payload: dict) -> Response:
     return requests.put(ENDPOINT + '/edit_movie', json=payload)
+
+def logout(payload: dict):
+    return requests.post(ENDPOINT + '/logout', json=payload)

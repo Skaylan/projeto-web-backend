@@ -1,6 +1,4 @@
-from app.config.app_config import *
-from app.config.db_config import *
-from app.models.tables.liked import Liked
+from app.extensions import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 from sqlalchemy import String, Text, Integer, Double, ForeignKey
 from uuid import uuid4 
