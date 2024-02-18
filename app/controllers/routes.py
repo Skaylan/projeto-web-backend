@@ -345,8 +345,7 @@ def logout():
                     'message': 'Token de autorização ausente!'
                 }), 401
 
-            token = body['token']
-
+            token = body.get('token')
             session = Session.query.filter_by(session_token=token).first()
 
             if session is None:
