@@ -33,8 +33,8 @@ def add_movie():
             running_time = body.get('running_time')
             category_id = body.get('category_id')
 
-            banner_img_id = uuid4()
-            poster_img_id = uuid4()
+            banner_img_id = str(uuid4())
+            poster_img_id = str(uuid4())
 
             convert_base64_to_image(banner_img_base64, banner_img_id, img_path)
             convert_base64_to_image(poster_img_base64, poster_img_id, img_path)
