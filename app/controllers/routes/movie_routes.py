@@ -10,9 +10,35 @@ import os
 from dotenv import load_dotenv
 
 
-img_path = os.getenv('IMAGES_SAVE_PATH')
+IMG_PATH = os.getenv('IMAGES_SAVE_PATH')
 
 movie_route = Blueprint('movie_route', __name__)
+
+@movie_route.route('/get/v1/get_image', methods=['GET'])
+def get_image():
+    if request.method == 'GET':
+        
+        #rota apenas para teste local
+        
+        id_imag = 'a5e7204b-bae9-4df3-a686-12a552b76353'
+        
+        try:        
+            string64 = convert_image_to_base64(IMG_PATH, id_imag)
+            
+            return jsonify({
+                'img': string64
+            }), 201
+            
+            
+        except Exception as error:
+            print_error_details(error)
+            return jsonify({
+                    'status': 'error',
+                    'message': 'An error has occurred!',
+                    'error_class': str(error.__class__),
+                    'error_cause': str(error.__cause__)
+                }), 500
+            
 
 @movie_route.route('/api/v1/add_movie', methods=['POST'])
 def add_movie():
@@ -36,8 +62,8 @@ def add_movie():
             banner_img_id = str(uuid4())
             poster_img_id = str(uuid4())
 
-            convert_base64_to_image(banner_img_base64, banner_img_id, img_path)
-            convert_base64_to_image(poster_img_base64, poster_img_id, img_path)
+            convert_base64_to_image(banner_img_base64, banner_img_id, IMG_PATH)
+            convert_base64_to_image(poster_img_base64, poster_img_id, IMG_PATH)
 
             movie = Movie(
                 title=title, original_title=original_title,
@@ -75,8 +101,8 @@ def get_movies():
             movies_schema = MovieSchema(many=True)
             payload = movies_schema.dump(movies)
 
-            payload['poster_img'] = convert_image_to_base64(img_path, payload['poster_img_id'])
-            payload['banner_img'] = convert_image_to_base64(img_path, payload['banner_img_id'])
+            payload['poster_img'] = convert_image_to_base64(IMG_PATH, payload['poster_img_id'])
+            payload['banner_img'] = convert_image_to_base64(IMG_PATH, payload['banner_img_id'])
 
             return jsonify({
                 'movies': payload
@@ -111,8 +137,8 @@ def get_one_movie():
                 movie_schema = MovieSchema()
                 payload = movie_schema.dump(movie)
                 
-                payload['poster_img'] = convert_image_to_base64(img_path, payload['poster_img_id'])
-                payload['banner_img'] = convert_image_to_base64(img_path, payload['banner_img_id'])
+                payload['poster_img'] = convert_image_to_base64(IMG_PATH, payload['poster_img_id'])
+                payload['banner_img'] = convert_image_to_base64(IMG_PATH, payload['banner_img_id'])
 
                 return jsonify({
                     'status': 'ok',
@@ -186,8 +212,8 @@ def edit_movie():
 
             movie = Movie.query.filter_by(id=movie_id).first()
             
-            convert_base64_to_image(new_banner_img_base64, movie['banner_img_id'], img_path)
-            convert_base64_to_image(new_poster_img_base64, movie['poster_img_id'], img_path)
+            convert_base64_to_image(new_banner_img_base64, movie['banner_img_id'], IMG_PATH)
+            convert_base64_to_image(new_poster_img_base64, movie['poster_img_id'], IMG_PATH)
 
             if movie == None:
                 return jsonify({
