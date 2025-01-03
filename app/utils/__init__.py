@@ -27,5 +27,6 @@ def convert_image_to_base64(img_path: str, img_uuid: str) -> str:
     """
 
     with open(f'{img_path}//{img_uuid}.png', 'rb') as img_file:
-        base64_string = base64.b64encode(img_file.read())
+        base64_string = str(base64.b64encode(img_file.read()))
+        base64_string = base64_string.replace('dataimage/jpegbase64', "")
     return str(base64_string)[2:].replace("'", '')
