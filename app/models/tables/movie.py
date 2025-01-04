@@ -17,15 +17,15 @@ class Movie(Base):
     poster_img_id: Mapped[str] = mapped_column(Text, unique=True, nullable=False) 
     launch_date: Mapped[str] = mapped_column(String(45), unique=False, nullable=False)
     running_time: Mapped[int] = mapped_column(Integer, unique=False, nullable=False) 
-    category_id: Mapped[str] = mapped_column(String, ForeignKey("category.id"), unique=False, nullable=False) 
     liked = relationship('Liked', backref='movie') 
+    categories = relationship('Category', backref='movie')
 
 
     def __init__(self, title: str, original_title: str, romanised_original_title: str,
-                 description: str, studio: str, director: str, rating: Double,
-                 banner_img_id: str, launch_date: str, poster_img_id: str, producer: str,
-                 running_time: int, category_id: str
-                 ):
+                description: str, studio: str, director: str, rating: Double,
+                banner_img_id: str, launch_date: str, poster_img_id: str, producer: str,
+                running_time: int
+                ):
         self.title = title
         self.original_title = original_title
         self.romanised_original_title = romanised_original_title
@@ -38,4 +38,3 @@ class Movie(Base):
         self.poster_img_id = poster_img_id
         self.producer = producer
         self.running_time = running_time
-        self.category_id = category_id
