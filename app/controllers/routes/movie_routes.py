@@ -1,6 +1,7 @@
 from flask import jsonify, request, Blueprint
 from app.models.tables.movie import Movie
 from app.models.tables.liked import Liked
+from app.models.tables.movie_category import MovieCategory
 from app.controllers.utils.functions import print_error_details
 from app.models.schemas.movie_schema import MovieSchema
 from app.extensions import db
@@ -57,7 +58,7 @@ def add_movie():
             poster_img_base64 = body.get('poster_img_base64')
             launch_date = body.get('launch_date')
             running_time = body.get('running_time')
-            category_id = body.get('category_id')
+            categories = body.get('categories')
 
             banner_img_id = str(uuid4())
             poster_img_id = str(uuid4())
@@ -72,11 +73,30 @@ def add_movie():
                 director=director, producer=producer,
                 rating=rating, banner_img_id=banner_img_id,
                 poster_img_id=poster_img_id, launch_date=launch_date,
-                running_time=running_time, category_id=category_id
+                running_time=running_time
             )
             
             db.session.add(movie)
             db.session.commit()
+            
+            max_interaction = 5
+            count = 0
+            
+            for category in categories:
+                
+                if count >= max_interaction:
+                    break
+                
+                movie_category = MovieCategory(
+                    movie_id=movie.id,
+                    category_id=category
+                )
+                
+                db.session.add(movie_category)
+                db.session.commit()
+                
+                count += 1
+                
             db.session.close()
             
             return jsonify({

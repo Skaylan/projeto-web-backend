@@ -17,8 +17,8 @@ class Movie(Base):
     poster_img_id: Mapped[str] = mapped_column(Text, unique=True, nullable=False) 
     launch_date: Mapped[str] = mapped_column(String(45), unique=False, nullable=False)
     running_time: Mapped[int] = mapped_column(Integer, unique=False, nullable=False) 
-    liked = relationship('Liked', backref='movie') 
-    categories = relationship('Category', backref='movie')
+    liked = relationship('Liked', backref='movie', cascade='all, delete-orphan') 
+    categories = relationship('MovieCategory', backref='movie', cascade='all, delete-orphan')
 
 
     def __init__(self, title: str, original_title: str, romanised_original_title: str,

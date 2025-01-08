@@ -7,8 +7,7 @@ from uuid import uuid4
 class Category(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
     name: Mapped[str] = mapped_column(String(45), unique=True, nullable=False)
-    movie_id: Mapped[str] = mapped_column(String, ForeignKey("movie.id"), nullable=False)
+    categories = relationship('MovieCategory', backref='category', cascade='all, delete-orphan')
     
-    def __init__(self, name:str, movie_id: str):
+    def __init__(self, name:str):
         self.name = name
-        self.movie_id = movie_id
