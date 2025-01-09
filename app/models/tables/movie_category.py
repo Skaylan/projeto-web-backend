@@ -1,15 +1,10 @@
-from app.extensions import Base
+from app.extensions import db
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, ForeignKey
 from uuid import uuid4 
 
 
-class MovieCategory(Base):
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    movie_id: Mapped[str] = mapped_column(String, ForeignKey('movie.id'), nullable=False)
-    category_id: Mapped[str] = mapped_column(String, ForeignKey('category.id'), nullable=False)
-    
-    def __init__(self, movie_id: str, category_id: str):
-        self.category_id = category_id
-        self.movie_id = movie_id
-        
+movie_category = db.Table('movie_category',
+    db.Column('movie_id', String, db.ForeignKey('movie.id'), primary_key=True),
+    db.Column('category_id', String, db.ForeignKey('category.id'), primary_key=True)
+)
