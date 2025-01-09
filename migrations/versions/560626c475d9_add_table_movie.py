@@ -39,8 +39,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('banner_img_id'),
     sa.UniqueConstraint('poster_img_id'),
-    sa.UniqueConstraint('running_time'),
-    sa.UniqueConstraint('studio')
     )
     # ### end Alembic commands ###
 
