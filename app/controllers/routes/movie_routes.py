@@ -21,7 +21,7 @@ def get_image():
         
         #rota apenas para teste local
         
-        id_imag = 'a5e7204b-bae9-4df3-a686-12a552b76353'
+        id_imag = 'd8c5edd6-5a03-42a8-ae9d-8375296db2f1'
         
         try:        
             string64 = convert_image_to_base64(IMG_PATH, id_imag)
@@ -62,13 +62,9 @@ def add_movie():
 
             banner_img_id = str(uuid4())
             poster_img_id = str(uuid4())
-            
-            print(type(release_date))
 
             convert_base64_to_image(banner_img_base64, banner_img_id, IMG_PATH)
             convert_base64_to_image(poster_img_base64, poster_img_id, IMG_PATH)
-            
-            categorias = []
 
             movie = Movie(
                 title=title, original_title=original_title,
@@ -112,9 +108,12 @@ def get_movies():
             movies = Movie.query.all()
             movies_schema = MovieSchema(many=True)
             payload = movies_schema.dump(movies)
-
-            payload['poster_img'] = convert_image_to_base64(IMG_PATH, payload['poster_img_id'])
-            payload['banner_img'] = convert_image_to_base64(IMG_PATH, payload['banner_img_id'])
+            
+            print(payload)
+            
+            for i, _ in enumerate(payload):
+                payload[i]['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['banner_img_id'])
+                payload[i]['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['poster_img_id'])
 
             return jsonify({
                 'movies': payload
