@@ -135,7 +135,7 @@ def get_one_movie():
         try:
             title = request.args.get('title')
             studio = request.args.get('studio')
-
+            
             if title != None and studio != None:
                 movie = Movie.query.filter_by(title=title).filter_by(studio=studio).first()
                 
@@ -222,9 +222,9 @@ def edit_movie():
             new_category_id = body.get('category_id')
 
             movie = Movie.query.filter_by(id=movie_id).first()
-            
-            convert_base64_to_image(new_banner_img_base64, movie['banner_img_id'], IMG_PATH)
-            convert_base64_to_image(new_poster_img_base64, movie['poster_img_id'], IMG_PATH)
+
+            convert_base64_to_image(new_banner_img_base64, movie.banner_img_id, IMG_PATH)
+            convert_base64_to_image(new_poster_img_base64, movie.poster_img_id, IMG_PATH)
 
             if movie == None:
                 return jsonify({
@@ -240,8 +240,8 @@ def edit_movie():
             movie.director = new_director
             movie.producer = new_producer
             movie.rating = new_rating
-            #movie.banner_img_id = new_banner_img_id
-            #movie.poster_img_id = new_poster_img_id
+            movie.banner_img_id = movie.banner_img_id
+            movie.poster_img_id = movie.poster_img_id
             movie.launch_date = new_launch_date
             movie.running_time = new_running_time
             movie.category_id = new_category_id
