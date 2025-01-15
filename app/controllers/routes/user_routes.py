@@ -48,17 +48,13 @@ def get_loggedin_users():
                     'message': 'Não há usuarios logados'
                 }), 200
             
-            #user_schema = UserSchema(many=True)
+            user_schema = UserSchema(many=True)
+            payload = user_schema.dump(loggedin_users)
 
-            payload_user = ([{'user_id': user_id, 'user_name': user_name, 'user_email': user_email, 'session_id': session_id}
-                            for _, user_id, user_name, user_email, session_id in loggedin_users])
-
-            print('payload_user: ',payload_user)
-                
             return jsonify({
                 'status': 'ok',
                 'mesage': 'Usuários logados recuperados com sucesso!',
-                'loggedin': payload_user
+                'loggedin': payload
             }), 200
 
         except Exception as error:
