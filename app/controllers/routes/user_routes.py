@@ -41,7 +41,7 @@ def get_loggedin_users():
             loggedin_users = Session.query.join(User, User.id == Session.user_id).add_columns(User.id,User.username,User.email, Session.id).all()
 
             print('loggedin_users: ', loggedin_users)
-                    
+            
             if not loggedin_users:
                 return jsonify({
                     'status': 'ok',
@@ -50,6 +50,8 @@ def get_loggedin_users():
             
             user_schema = UserSchema(many=True)
             payload = user_schema.dump(loggedin_users)
+
+            print(payload)
 
             return jsonify({
                 'status': 'ok',
