@@ -16,7 +16,10 @@ def get_users():
         users = User.query.all()
         user_schema = UserSchema(many=True)
         payload = user_schema.dump(users)
-        
+        payloadd = users
+
+        print(payloadd)
+
         return jsonify({
             'users': payload
         }), 200
@@ -29,6 +32,43 @@ def get_users():
                 'error_class': str(error.__class__),
                 'error_cause': str(error.__cause__)
             }), 500
+    
+
+@user_route.route('/api/v1/get_loggedin_users', methods=['GET'])
+def get_loggedin_users():
+    if request.method == 'GET':
+        try:
+            loggedin_users = Session.query.join(User, User.id == Session.user_id).add_columns(User.id,User.username,User.email, Session.id).all()
+
+            print('loggedin_users: ', loggedin_users)
+                    
+            if not loggedin_users:
+                return jsonify({
+                    'status': 'ok',
+                    'message': 'Não há usuarios logados'
+                }), 200
+            
+            #user_schema = UserSchema(many=True)
+
+            payload_user = ([{'user_id': user_id, 'user_name': user_name, 'user_email': user_email, 'session_id': session_id}
+                            for _, user_id, user_name, user_email, session_id in loggedin_users])
+
+            print('payload_user: ',payload_user)
+                
+            return jsonify({
+                'status': 'ok',
+                'mesage': 'Usuários logados recuperados com sucesso!',
+                'loggedin': payload_user
+            }), 200
+
+        except Exception as error:
+            print_error_details(error)
+            return jsonify({
+                    'status': 'error',
+                    'message': 'An error has occurred!',
+                    'error_class': str(error.__class__),
+                    'error_cause': str(error.__cause__)
+                }), 500
 
 @user_route.route('/api/v1/get_one_user', methods=['GET'])
 def get_one_user():
