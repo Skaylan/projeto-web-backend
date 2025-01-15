@@ -3,6 +3,7 @@ from app.models.tables.user import User
 from app.models.tables.session import Session
 from flask import jsonify, request, Blueprint
 from app.models.schemas.user_schema import UserSchema
+from app.models.schemas.session_schema import SessionSchema
 from app.controllers.utils.functions import print_error_details
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -38,8 +39,8 @@ def get_users():
 def get_loggedin_users():
     if request.method == 'GET':
         try:
-            loggedin_users = Session.query.join(User, User.id == Session.user_id).add_columns(User.id,User.username,User.email, Session.id).all()
-
+            # loggedin_users = Session.query.join(User, User.id == Session.user_id).add_columns(User.id,User.username,User.email, Session.id).all()
+            loggedin_users = Session.query.all()
             print('loggedin_users: ', loggedin_users)
             
             if not loggedin_users:
@@ -48,8 +49,8 @@ def get_loggedin_users():
                     'message': 'Não há usuarios logados'
                 }), 200
             
-            user_schema = UserSchema(many=True)
-            payload = user_schema.dump(loggedin_users)
+            session_schema = SessionSchema(many=True)
+            payload = session_schema.dump(loggedin_users)
 
             print(payload)
 
