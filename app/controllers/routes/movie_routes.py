@@ -1,12 +1,45 @@
 from flask import jsonify, request, Blueprint
 from app.models.tables.movie import Movie
 from app.models.tables.liked import Liked
+from app.models.tables.category import Category
 from app.controllers.utils.functions import print_error_details
 from app.models.schemas.movie_schema import MovieSchema
 from app.extensions import db
+from app.utils import *
+from uuid import uuid4
+import os
+from dotenv import load_dotenv
 
+
+IMG_PATH = os.getenv('IMAGES_SAVE_PATH')
 
 movie_route = Blueprint('movie_route', __name__)
+
+@movie_route.route('/get/v1/get_image', methods=['GET'])
+def get_image():
+    if request.method == 'GET':
+        
+        #rota apenas para teste local
+        
+        id_imag = 'd8c5edd6-5a03-42a8-ae9d-8375296db2f1'
+        
+        try:        
+            string64 = convert_image_to_base64(IMG_PATH, id_imag)
+            
+            return jsonify({
+                'img': string64
+            }), 201
+            
+            
+        except Exception as error:
+            print_error_details(error)
+            return jsonify({
+                    'status': 'error',
+                    'message': 'An error has occurred!',
+                    'error_class': str(error.__class__),
+                    'error_cause': str(error.__cause__)
+                }), 500
+            
 
 @movie_route.route('/api/v1/add_movie', methods=['POST'])
 def add_movie():
@@ -21,24 +54,37 @@ def add_movie():
             director = body.get('director')
             producer = body.get('producer')
             rating = body.get('rating')
-            banner_img_id = body.get('banner_img_id')
-            poster_img_id = body.get('poster_img_id')
-            launch_date = body.get('launch_date')
+            banner_img_base64 = body.get('banner_img_base64')
+            poster_img_base64 = body.get('poster_img_base64')
+            release_date = body.get('launch_date')
             running_time = body.get('running_time')
-            category_id = body.get('category_id')
-            
+            categories = body.get('categories')
+
+            banner_img_id = str(uuid4())
+            poster_img_id = str(uuid4())
+
+            convert_base64_to_image(banner_img_base64, banner_img_id, IMG_PATH)
+            convert_base64_to_image(poster_img_base64, poster_img_id, IMG_PATH)
+
             movie = Movie(
                 title=title, original_title=original_title,
                 romanised_original_title=romanized_original_title,
                 description=description, studio=studio,
                 director=director, producer=producer,
                 rating=rating, banner_img_id=banner_img_id,
-                poster_img_id=poster_img_id, launch_date=launch_date,
-                running_time=running_time, category_id=category_id
+                poster_img_id=poster_img_id, release_date=release_date,
+                running_time=running_time
             )
+            
+            for category in categories:
+                
+                categoria = Category.query.filter_by(id=category).first()
+                
+                movie.categories.append(categoria)
             
             db.session.add(movie)
             db.session.commit()
+                
             db.session.close()
             
             return jsonify({
@@ -62,6 +108,12 @@ def get_movies():
             movies = Movie.query.all()
             movies_schema = MovieSchema(many=True)
             payload = movies_schema.dump(movies)
+            
+            print(payload)
+            
+            for i, _ in enumerate(payload):
+                payload[i]['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['banner_img_id'])
+                payload[i]['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['poster_img_id'])
 
             return jsonify({
                 'movies': payload
@@ -83,7 +135,7 @@ def get_one_movie():
         try:
             title = request.args.get('title')
             studio = request.args.get('studio')
-
+            
             if title != None and studio != None:
                 movie = Movie.query.filter_by(title=title).filter_by(studio=studio).first()
                 
@@ -95,6 +147,9 @@ def get_one_movie():
 
                 movie_schema = MovieSchema()
                 payload = movie_schema.dump(movie)
+                
+                payload['poster_img'] = convert_image_to_base64(IMG_PATH, payload['poster_img_id'])
+                payload['banner_img'] = convert_image_to_base64(IMG_PATH, payload['banner_img_id'])
 
                 return jsonify({
                     'status': 'ok',
@@ -160,13 +215,16 @@ def edit_movie():
             new_director = body.get('director')
             new_producer = body.get('producer')
             new_rating = body.get('rating')
-            new_banner_img_id = body.get('banner_img_id')
-            new_poster_img_id = body.get('poster_img_id')
+            new_banner_img_base64 = body.get('banner_img_base64')
+            new_poster_img_base64 = body.get('poster_img_base64')
             new_launch_date = body.get('launch_date')
             new_running_time = body.get('running_time')
             new_category_id = body.get('category_id')
 
             movie = Movie.query.filter_by(id=movie_id).first()
+
+            convert_base64_to_image(new_banner_img_base64, movie.banner_img_id, IMG_PATH)
+            convert_base64_to_image(new_poster_img_base64, movie.poster_img_id, IMG_PATH)
 
             if movie == None:
                 return jsonify({
@@ -182,8 +240,8 @@ def edit_movie():
             movie.director = new_director
             movie.producer = new_producer
             movie.rating = new_rating
-            movie.banner_img_id = new_banner_img_id
-            movie.poster_img_id = new_poster_img_id
+            movie.banner_img_id = movie.banner_img_id
+            movie.poster_img_id = movie.poster_img_id
             movie.launch_date = new_launch_date
             movie.running_time = new_running_time
             movie.category_id = new_category_id

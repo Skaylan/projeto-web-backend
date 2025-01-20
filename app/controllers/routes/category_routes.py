@@ -137,6 +137,8 @@ def get_one_category():
     if request.method == 'GET':
         try:
             name = request.args.get('name')
+            
+            print(name)
 
             one_category = Category.query.filter_by(name=name).first()
 
@@ -149,6 +151,43 @@ def get_one_category():
             category_schema = CategorySchema()
             payload = category_schema.dump(one_category)
 
+            return jsonify({
+                'status': 'ok',
+                'category': payload
+            }),200
+        
+        except Exception as error:
+            print_error_details(error)
+            return jsonify({
+                'status': 'error',
+                'message': 'An error has occurred!',
+                'error_class': str(error.__class__),
+                'error_cause': str(error.__cause__)
+            }), 500
+            
+            
+@category_route.route('/api/v1/get_category_by_search', methods=['POST'])
+def get_category_by_search():
+    if request.method == 'POST':
+        try:
+            body = request.get_json()
+            name = body.get('name')
+            
+            print(name)
+            
+            category_found = Category.query.filter(Category.name.like(f'%{name}%')).all()
+            
+            if category_found == None:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Categoria não encontrada!'
+                }),404
+                
+            categoty_schema = CategorySchema(many=True)
+            payload = categoty_schema.dump(category_found)
+            
+            print('py:',payload)
+            
             return jsonify({
                 'status': 'ok',
                 'category': payload

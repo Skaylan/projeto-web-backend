@@ -1,7 +1,8 @@
 from app.extensions import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 from sqlalchemy import String, Text, Integer, Double, ForeignKey
-from uuid import uuid4 
+from uuid import uuid4
+from app.models.tables.movie_category import movie_category
 
 class Movie(Base): 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4())) 
@@ -15,17 +16,17 @@ class Movie(Base):
     rating: Mapped[Double] = mapped_column(Double, unique=False, nullable=False) 
     banner_img_id: Mapped[str] = mapped_column(Text, unique=True, nullable=False) 
     poster_img_id: Mapped[str] = mapped_column(Text, unique=True, nullable=False) 
-    launch_date: Mapped[str] = mapped_column(String(45), unique=False, nullable=False)
+    release_date: Mapped[str] = mapped_column(String(45), unique=False, nullable=False)
     running_time: Mapped[int] = mapped_column(Integer, unique=False, nullable=False) 
-    category_id: Mapped[str] = mapped_column(String, ForeignKey("category.id"), unique=False, nullable=False) 
-    liked = relationship('Liked', backref='movie') 
+    liked = relationship('Liked', backref='movie', cascade='all, delete-orphan') 
+    categories = relationship('Category', backref='movie', secondary=movie_category)
 
 
     def __init__(self, title: str, original_title: str, romanised_original_title: str,
-                 description: str, studio: str, director: str, rating: Double,
-                 banner_img_id: str, launch_date: str, poster_img_id: str, producer: str,
-                 running_time: int, category_id: str
-                 ):
+                description: str, studio: str, director: str, rating: Double,
+                banner_img_id: str, release_date: str, poster_img_id: str, producer: str,
+                running_time: int
+                ):
         self.title = title
         self.original_title = original_title
         self.romanised_original_title = romanised_original_title
@@ -34,8 +35,7 @@ class Movie(Base):
         self.director = director
         self.rating = rating
         self.banner_img_id = banner_img_id
-        self.launch_date = launch_date
+        self.release_date = release_date
         self.poster_img_id = poster_img_id
         self.producer = producer
         self.running_time = running_time
-        self.category_id = category_id
