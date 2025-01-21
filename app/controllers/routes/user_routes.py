@@ -92,7 +92,7 @@ def get_one_user():
         print('POSTER', payload['profile_img_id'])
 
         payload['banner_img'] = convert_image_to_base64(IMG_PATH, payload['banner_img_id'])
-        payload['poster_img'] = convert_image_to_base64(IMG_PATH, payload['profile_img_id'])
+        payload['profile_img'] = convert_image_to_base64(IMG_PATH, payload['profile_img_id'])
             
         return jsonify({
             'status': 'ok',
