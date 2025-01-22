@@ -77,6 +77,8 @@ def get_one_user():
     try:
         email = request.args.get('email')
         user = User.query.filter_by(email=email).first()
+
+        print(email)
         
         if user == None:
             return jsonify({
@@ -91,9 +93,13 @@ def get_one_user():
         print('BANNER', payload['banner_img_id'])
         print('POSTER', payload['profile_img_id'])
 
-        payload['banner_img'] = convert_image_to_base64(IMG_PATH, payload['banner_img_id'])
-        payload['profile_img'] = convert_image_to_base64(IMG_PATH, payload['profile_img_id'])
-            
+        if(payload['banner_img_id'] and payload['profile_img_id'] != None): 
+            payload['banner_img'] = convert_image_to_base64(IMG_PATH, payload['banner_img_id'])
+            payload['profile_img'] = convert_image_to_base64(IMG_PATH, payload['profile_img_id'])
+        else:
+            payload['banner_img'] = ''
+            payload['profile_img'] = ''
+
         return jsonify({
             'status': 'ok',
             'user': payload
