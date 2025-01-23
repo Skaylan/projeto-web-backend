@@ -1,10 +1,9 @@
-from app.extensions import db
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, ForeignKey
-from uuid import uuid4 
+from datetime import datetime
+from app.extensions import Base
+from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy.orm import relationship ,Mapped, mapped_column
 
+class MovieCategory(Base):
 
-movie_category = db.Table('movie_category',
-    db.Column('movie_id', String, db.ForeignKey('movie.id'), primary_key=True),
-    db.Column('category_id', String, db.ForeignKey('category.id'), primary_key=True)
-)
+    movie_id: Mapped[str] = mapped_column(String, ForeignKey("movie.id"), primary_key=True, unique=False, nullable=True)
+    category_id: Mapped[str] = mapped_column(String, ForeignKey("category.id"), primary_key=True, unique=False, nullable=True)
