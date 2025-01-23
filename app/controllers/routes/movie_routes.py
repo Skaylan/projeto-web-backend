@@ -4,6 +4,7 @@ from app.models.tables.liked import Liked
 from app.models.tables.category import Category
 from app.controllers.utils.functions import print_error_details
 from app.models.schemas.movie_schema import MovieSchema
+from app.models.schemas.liked_schema import LikedSchema
 from app.extensions import db
 from app.utils import *
 from uuid import uuid4
@@ -283,6 +284,44 @@ def like_movie():
             }), 200
             
         except Exception as error:
+                print_error_details(error)
+                return jsonify({
+                    'status': 'error',
+                    'message': 'An error has occurred!',
+                    'error_class': str(error.__class__),
+                    'error_cause': str(error.__cause__)
+                }),500
+        
+
+@movie_route.route('/api/v1/get_liked_movies', methods=['GET'])
+def get_liked_movies():
+    try:
+        if request.method == 'GET':
+            id = request.args.get('id')
+
+            liked_movie = Liked.query.filter_by(user_id=id).all()
+            liked_movie_schema = LikedSchema(many=True)
+            payload = liked_movie_schema.dump(liked_movie)
+
+            print(payload)
+
+            if payload is None:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Nenhum dado encontrado!'
+                }), 404
+            
+            for i, _ in enumerate(payload):
+                payload[i]['movie']['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['movie']['banner_img_id'])
+                payload[i]['movie']['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['movie']['poster_img_id'])
+
+            return jsonify({
+                'status': 'ok',
+                'message': 'filme encontrados com sucesso!',
+                'liked_movie': payload
+            }), 200
+    
+    except Exception as error:
                 print_error_details(error)
                 return jsonify({
                     'status': 'error',
