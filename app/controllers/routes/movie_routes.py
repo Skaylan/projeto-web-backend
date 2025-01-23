@@ -1,10 +1,13 @@
 from flask import jsonify, request, Blueprint
+from app.models.tables.movie_category import MovieCategory
 from app.models.tables.movie import Movie
 from app.models.tables.liked import Liked
 from app.models.tables.category import Category
 from app.controllers.utils.functions import print_error_details
 from app.models.schemas.movie_schema import MovieSchema
 from app.models.schemas.liked_schema import LikedSchema
+from app.models.schemas.category_schema import CategorySchema
+from app.models.schemas.category_movie_schema import MovieCategorySchema
 from app.extensions import db
 from app.utils import *
 from uuid import uuid4
@@ -76,14 +79,17 @@ def add_movie():
                 poster_img_id=poster_img_id, release_date=release_date,
                 running_time=running_time
             )
-            
-            for category in categories:
-                
-                categoria = Category.query.filter_by(id=category).first()
-                
-                movie.categories.append(categoria)
-            
+
             db.session.add(movie)
+            db.session.flush() 
+            
+            for category_id in categories:
+                category = Category.query.filter_by(id=category_id).first()
+                print(category)
+                if category:
+                    movie_category = MovieCategory(movie_id=movie.id, category_id=category.id)
+                    db.session.add(movie_category)
+            
             db.session.commit()
                 
             db.session.close()
@@ -109,12 +115,14 @@ def get_movies():
             movies = Movie.query.all()
             movies_schema = MovieSchema(many=True)
             payload = movies_schema.dump(movies)
-            
-            print(payload)
-            
+
             for i, _ in enumerate(payload):
-                payload[i]['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['banner_img_id'])
-                payload[i]['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['poster_img_id'])
+                if payload[i]['banner_img_id'] or payload[i]['poster_img_id'] is None:
+                    payload[i]['banner_img'] = ''
+                    payload[i]['poster_img'] = ''
+                else:
+                    payload[i]['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['banner_img_id'])
+                    payload[i]['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['poster_img_id'])
 
             return jsonify({
                 'movies': payload
@@ -220,7 +228,6 @@ def edit_movie():
             new_poster_img_base64 = body.get('poster_img_base64')
             new_launch_date = body.get('launch_date')
             new_running_time = body.get('running_time')
-            new_category_id = body.get('category_id')
 
             movie = Movie.query.filter_by(id=movie_id).first()
 
