@@ -112,17 +112,13 @@ def add_movie():
 def get_movies():
     if request.method == 'GET':
         try:
-            movies = Movie.query.all()
-            movies_schema = MovieSchema(many=True)
+            movies = MovieCategory.query.all()
+            movies_schema = MovieCategorySchema(many=True)
             payload = movies_schema.dump(movies)
 
             for i, _ in enumerate(payload):
-                if payload[i]['banner_img_id'] or payload[i]['poster_img_id'] is None:
-                    payload[i]['banner_img'] = ''
-                    payload[i]['poster_img'] = ''
-                else:
-                    payload[i]['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['banner_img_id'])
-                    payload[i]['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['poster_img_id'])
+                payload[i]['movie']['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['movie']['banner_img_id'])
+                payload[i]['movie']['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['movie']['poster_img_id'])
 
             return jsonify({
                 'movies': payload
