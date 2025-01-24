@@ -143,6 +143,7 @@ def get_one_movie():
             
             if title != None and studio != None:
                 movie = Movie.query.filter_by(title=title).filter_by(studio=studio).first()
+                movie_category = MovieCategory.query.filter_by(movie_id=movie.id).first()
                 
                 if movie == None:
                     return jsonify({
@@ -150,11 +151,13 @@ def get_one_movie():
                         'message': 'Filme não encontrado!'
                     }),404
 
-                movie_schema = MovieSchema()
-                payload = movie_schema.dump(movie)
+                movie_schema = MovieCategorySchema()
+                payload = movie_schema.dump(movie_category)
+
+                print(payload)
                 
-                payload['poster_img'] = convert_image_to_base64(IMG_PATH, payload['poster_img_id'])
-                payload['banner_img'] = convert_image_to_base64(IMG_PATH, payload['banner_img_id'])
+                payload['movie']['poster_img'] = convert_image_to_base64(IMG_PATH, payload['movie']['poster_img_id'])
+                payload['movie']['banner_img'] = convert_image_to_base64(IMG_PATH, payload['movie']['banner_img_id'])
 
                 return jsonify({
                     'status': 'ok',
