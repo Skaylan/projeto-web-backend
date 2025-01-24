@@ -228,6 +228,7 @@ def edit_movie():
             new_poster_img_base64 = body.get('poster_img_base64')
             new_launch_date = body.get('launch_date')
             new_running_time = body.get('running_time')
+            categories = body.get('categories')
 
             movie = Movie.query.filter_by(id=movie_id).first()
 
@@ -252,7 +253,20 @@ def edit_movie():
             movie.poster_img_id = movie.poster_img_id
             movie.launch_date = new_launch_date
             movie.running_time = new_running_time
-            movie.category_id = new_category_id
+
+            db.session.commit()
+
+            try:
+                MovieCategory.query.filter_by(movie_id=movie.id).delete()
+                db.session.commit()
+                #print("Registros deletados com sucesso!")
+            except Exception as e:
+                db.session.rollback()
+                print(f"Erro ao deletar registros: {e}")
+
+            for category in categories:
+                movie_category = MovieCategory(movie_id=movie.id, category_id=category)
+                db.session.add(movie_category)
 
             db.session.commit()
             db.session.close()
@@ -270,6 +284,7 @@ def edit_movie():
                     'error_class': str(error.__class__),
                     'error_cause': str(error.__cause__)
                 }),500
+        
                 
 @movie_route.route('/api/v1/like_movie', methods=['POST'])
 def like_movie():
