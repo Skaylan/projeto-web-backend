@@ -116,12 +116,26 @@ def get_movies():
             movies_schema = MovieCategorySchema(many=True)
             payload = movies_schema.dump(movies)
 
-            for i, _ in enumerate(payload):
-                payload[i]['movie']['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['movie']['banner_img_id'])
-                payload[i]['movie']['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['movie']['poster_img_id'])
+            movies_by_id = {}
+            for item in payload:
+                movie_id = item['movie']['id']
+
+                if movie_id not in movies_by_id:
+                    movies_by_id[movie_id] = {
+                        **item['movie'],
+                        "categories": []
+                    }
+
+                movies_by_id[movie_id]['categories'].append(item['category'])
+
+                if len(movies_by_id[movie_id]['categories']) == 1:
+                    movies_by_id[movie_id]['banner_img'] = convert_image_to_base64(IMG_PATH, item['movie']['banner_img_id'])
+                    movies_by_id[movie_id]['poster_img'] = convert_image_to_base64(IMG_PATH, item['movie']['poster_img_id'])
+
+            movies_list = list(movies_by_id.values())
 
             return jsonify({
-                'movies': payload
+                'movies': movies_list
             }), 200
 
         except Exception as error:
@@ -153,8 +167,6 @@ def get_one_movie():
 
                 movie_schema = MovieCategorySchema()
                 payload = movie_schema.dump(movie_category)
-
-                print(payload)
                 
                 payload['movie']['poster_img'] = convert_image_to_base64(IMG_PATH, payload['movie']['poster_img_id'])
                 payload['movie']['banner_img'] = convert_image_to_base64(IMG_PATH, payload['movie']['banner_img_id'])
@@ -324,14 +336,22 @@ def get_liked_movies():
             liked_movie_schema = LikedSchema(many=True)
             payload = liked_movie_schema.dump(liked_movie)
 
-            print(payload)
-
             if payload is None:
                 return jsonify({
                     'status': 'error',
                     'message': 'Nenhum dado encontrado!'
                 }), 404
             
+            for i, _ in enumerate(payload):
+                category = MovieCategory.query.filter_by(movie_id=payload[i]['movie']['id'])
+                category_schema = MovieCategorySchema(many=True)
+                payCat = category_schema.dump(category)
+
+                print(payload[i]['movie']['title'])
+                print(payload[i]['movie']['id'])
+                print(payCat[i]['category'])
+                
+
             for i, _ in enumerate(payload):
                 payload[i]['movie']['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['movie']['banner_img_id'])
                 payload[i]['movie']['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['movie']['poster_img_id'])
