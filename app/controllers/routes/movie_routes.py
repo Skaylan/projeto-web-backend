@@ -64,6 +64,12 @@ def add_movie():
             running_time = body.get('running_time')
             categories = body.get('categories')
 
+            if categories is None:
+                return jsonify({
+                    'status': 'Error',
+                    'message': 'O filme precisa ter uma categoria selecionada!'
+                }),400
+
             banner_img_id = str(uuid4())
             poster_img_id = str(uuid4())
 
@@ -240,6 +246,12 @@ def edit_movie():
             new_launch_date = body.get('launch_date')
             new_running_time = body.get('running_time')
             categories = body.get('categories')
+
+            if categories is None:
+                return jsonify({
+                    'status': 'Error',
+                    'message': 'O filme precisa ter uma categoria selecionada!'
+                }),400
 
             movie = Movie.query.filter_by(id=movie_id).first()
 
