@@ -125,7 +125,7 @@ def get_movies():
                         **item['movie'],
                         "categories": []
                     }
-
+                
                 movies_by_id[movie_id]['categories'].append(item['category'])
 
                 if len(movies_by_id[movie_id]['categories']) == 1:
@@ -328,8 +328,8 @@ def like_movie():
 
 @movie_route.route('/api/v1/get_liked_movies', methods=['GET'])
 def get_liked_movies():
-    try:
-        if request.method == 'GET':
+    if request.method == 'GET':
+        try:
             id = request.args.get('id')
 
             liked_movie = Liked.query.filter_by(user_id=id).all()
@@ -341,28 +341,41 @@ def get_liked_movies():
                     'status': 'error',
                     'message': 'Nenhum dado encontrado!'
                 }), 404
-            
-            for i, _ in enumerate(payload):
-                category = MovieCategory.query.filter_by(movie_id=payload[i]['movie']['id'])
+
+            movies_by_id = {}
+            for item in payload:
+                movie_id = item['movie']['id']
+
+                if movie_id not in movies_by_id:
+                    movies_by_id[movie_id] = {
+                        **item['movie'],
+                        "user": item['user'],
+                        "categories": []
+                    }
+
+                    movies_by_id[movie_id]['user'].pop('banner_img_id')
+                    movies_by_id[movie_id]['user'].pop('profile_img_id')
+
+                category = MovieCategory.query.filter_by(movie_id=item['movie']['id'])
                 category_schema = MovieCategorySchema(many=True)
-                payCat = category_schema.dump(category)
+                payload_category = category_schema.dump(category)
 
-                print(payload[i]['movie']['title'])
-                print(payload[i]['movie']['id'])
-                print(payCat[i]['category'])
-                
+                for category in payload_category:
+                    movies_by_id[movie_id]['categories'].append(category['category'])
 
-            for i, _ in enumerate(payload):
-                payload[i]['movie']['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['movie']['banner_img_id'])
-                payload[i]['movie']['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['movie']['poster_img_id'])
+                    if len(movies_by_id[movie_id]['categories']) == 1:
+                        movies_by_id[movie_id]['banner_img'] = convert_image_to_base64(IMG_PATH, item['movie']['banner_img_id'])
+                        movies_by_id[movie_id]['poster_img'] = convert_image_to_base64(IMG_PATH, item['movie']['poster_img_id'])
+
+            movies_list = list(movies_by_id.values())
 
             return jsonify({
                 'status': 'ok',
                 'message': 'filme encontrados com sucesso!',
-                'liked_movie': payload
+                'liked_movie': movies_list
             }), 200
     
-    except Exception as error:
+        except Exception as error:
                 print_error_details(error)
                 return jsonify({
                     'status': 'error',
