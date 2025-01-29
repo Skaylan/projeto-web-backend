@@ -2,7 +2,6 @@ from app.extensions import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 from sqlalchemy import String, Text, Integer, Double, ForeignKey
 from uuid import uuid4
-from app.models.tables.movie_category import movie_category
 
 class Movie(Base): 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4())) 
@@ -19,7 +18,7 @@ class Movie(Base):
     release_date: Mapped[str] = mapped_column(String(45), unique=False, nullable=False)
     running_time: Mapped[int] = mapped_column(Integer, unique=False, nullable=False) 
     liked = relationship('Liked', backref='movie', cascade='all, delete-orphan') 
-    categories = relationship('Category', backref='movie', secondary=movie_category)
+    categories = relationship('MovieCategory', backref='movie')
 
 
     def __init__(self, title: str, original_title: str, romanised_original_title: str,

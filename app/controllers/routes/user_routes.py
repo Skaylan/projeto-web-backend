@@ -5,9 +5,13 @@ from flask import jsonify, request, Blueprint
 from app.models.schemas.user_schema import UserSchema
 from app.models.schemas.session_schema import SessionSchema
 from app.controllers.utils.functions import print_error_details
+from uuid import uuid4
+from app.utils import *
+import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+IMG_PATH = os.getenv('IMAGES_SAVE_PATH')
 
 user_route = Blueprint('user_route', __name__)
 
@@ -39,7 +43,6 @@ def get_users():
 def get_loggedin_users():
     if request.method == 'GET':
         try:
-            # loggedin_users = Session.query.join(User, User.id == Session.user_id).add_columns(User.id,User.username,User.email, Session.id).all()
             loggedin_users = Session.query.all()
             print('loggedin_users: ', loggedin_users)
             
@@ -74,15 +77,29 @@ def get_one_user():
     try:
         email = request.args.get('email')
         user = User.query.filter_by(email=email).first()
-        user_schema = UserSchema()
-        payload = user_schema.dump(user)
+
+        print(email)
         
         if user == None:
             return jsonify({
                 'status': 'error',
                 'mesage': 'usuario não existe!'
             }), 404
-            
+        
+        user_schema = UserSchema()
+        payload = user_schema.dump(user)
+
+        print(payload)
+        print('BANNER', payload['banner_img_id'])
+        print('POSTER', payload['profile_img_id'])
+
+        if(payload['banner_img_id'] and payload['profile_img_id'] != None): 
+            payload['banner_img'] = convert_image_to_base64(IMG_PATH, payload['banner_img_id'])
+            payload['profile_img'] = convert_image_to_base64(IMG_PATH, payload['profile_img_id'])
+        else:
+            payload['banner_img'] = ''
+            payload['profile_img'] = ''
+
         return jsonify({
             'status': 'ok',
             'user': payload
@@ -185,3 +202,48 @@ def delete_user():
                     'error_class': str(error.__class__),
                     'error_cause': str(error.__cause__)
                 }), 500
+
+
+@user_route.route('/api/v1/edit_profile_images', methods=['POST'])
+def add_profile_images():
+    if request.method == 'POST':
+
+        try:
+            body = request.get_json()
+            user_id = body.get('user_id')
+            banner_img_base64 = body.get('banner_img_base64')
+            profile_img_base64 = body.get('profile_img_base64')
+
+            banner_img_id = str(uuid4())
+            profile_img_id = str(uuid4())
+
+            convert_base64_to_image(banner_img_base64, banner_img_id, IMG_PATH)
+            convert_base64_to_image(profile_img_base64, profile_img_id, IMG_PATH)
+
+            user = User.query.filter_by(id=user_id).first()
+
+            if user is None:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Usuário não encontrado!'
+                }), 404
+            
+            user.set_images(banner_img_id, profile_img_id)
+
+            db.session.commit()
+            db.session.close()
+
+            return jsonify({
+                'status': 'ok',
+                'message': 'Perfil alterado com sucesso!'
+            }), 200
+
+        except Exception as error:
+            print_error_details(error)
+            return jsonify({
+                    'status': 'error',
+                    'message': 'An error has occurred!',
+                    'error_class': str(error.__class__),
+                    'error_cause': str(error.__cause__)
+                }), 500
+

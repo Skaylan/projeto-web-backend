@@ -1,9 +1,13 @@
 from flask import jsonify, request, Blueprint
+from app.models.tables.movie_category import MovieCategory
 from app.models.tables.movie import Movie
 from app.models.tables.liked import Liked
 from app.models.tables.category import Category
 from app.controllers.utils.functions import print_error_details
 from app.models.schemas.movie_schema import MovieSchema
+from app.models.schemas.liked_schema import LikedSchema
+from app.models.schemas.category_schema import CategorySchema
+from app.models.schemas.category_movie_schema import MovieCategorySchema
 from app.extensions import db
 from app.utils import *
 from uuid import uuid4
@@ -60,6 +64,12 @@ def add_movie():
             running_time = body.get('running_time')
             categories = body.get('categories')
 
+            if categories is None:
+                return jsonify({
+                    'status': 'Error',
+                    'message': 'O filme precisa ter uma categoria selecionada!'
+                }),400
+
             banner_img_id = str(uuid4())
             poster_img_id = str(uuid4())
 
@@ -75,14 +85,17 @@ def add_movie():
                 poster_img_id=poster_img_id, release_date=release_date,
                 running_time=running_time
             )
-            
-            for category in categories:
-                
-                categoria = Category.query.filter_by(id=category).first()
-                
-                movie.categories.append(categoria)
-            
+
             db.session.add(movie)
+            db.session.flush() 
+            
+            for category_id in categories:
+                category = Category.query.filter_by(id=category_id).first()
+                print(category)
+                if category:
+                    movie_category = MovieCategory(movie_id=movie.id, category_id=category.id)
+                    db.session.add(movie_category)
+            
             db.session.commit()
                 
             db.session.close()
@@ -105,18 +118,30 @@ def add_movie():
 def get_movies():
     if request.method == 'GET':
         try:
-            movies = Movie.query.all()
-            movies_schema = MovieSchema(many=True)
+            movies = MovieCategory.query.all()
+            movies_schema = MovieCategorySchema(many=True)
             payload = movies_schema.dump(movies)
-            
-            print(payload)
-            
-            for i, _ in enumerate(payload):
-                payload[i]['banner_img'] = convert_image_to_base64(IMG_PATH, payload[i]['banner_img_id'])
-                payload[i]['poster_img'] = convert_image_to_base64(IMG_PATH, payload[i]['poster_img_id'])
+
+            movies_by_id = {}
+            for item in payload:
+                movie_id = item['movie']['id']
+
+                if movie_id not in movies_by_id:
+                    movies_by_id[movie_id] = {
+                        **item['movie'],
+                        "categories": []
+                    }
+                
+                movies_by_id[movie_id]['categories'].append(item['category'])
+
+                if len(movies_by_id[movie_id]['categories']) == 1:
+                    movies_by_id[movie_id]['banner_img'] = convert_image_to_base64(IMG_PATH, item['movie']['banner_img_id'])
+                    movies_by_id[movie_id]['poster_img'] = convert_image_to_base64(IMG_PATH, item['movie']['poster_img_id'])
+
+            movies_list = list(movies_by_id.values())
 
             return jsonify({
-                'movies': payload
+                'movies': movies_list
             }), 200
 
         except Exception as error:
@@ -138,6 +163,7 @@ def get_one_movie():
             
             if title != None and studio != None:
                 movie = Movie.query.filter_by(title=title).filter_by(studio=studio).first()
+                movie_category = MovieCategory.query.filter_by(movie_id=movie.id).first()
                 
                 if movie == None:
                     return jsonify({
@@ -145,11 +171,11 @@ def get_one_movie():
                         'message': 'Filme não encontrado!'
                     }),404
 
-                movie_schema = MovieSchema()
-                payload = movie_schema.dump(movie)
+                movie_schema = MovieCategorySchema()
+                payload = movie_schema.dump(movie_category)
                 
-                payload['poster_img'] = convert_image_to_base64(IMG_PATH, payload['poster_img_id'])
-                payload['banner_img'] = convert_image_to_base64(IMG_PATH, payload['banner_img_id'])
+                payload['movie']['poster_img'] = convert_image_to_base64(IMG_PATH, payload['movie']['poster_img_id'])
+                payload['movie']['banner_img'] = convert_image_to_base64(IMG_PATH, payload['movie']['banner_img_id'])
 
                 return jsonify({
                     'status': 'ok',
@@ -219,7 +245,13 @@ def edit_movie():
             new_poster_img_base64 = body.get('poster_img_base64')
             new_launch_date = body.get('launch_date')
             new_running_time = body.get('running_time')
-            new_category_id = body.get('category_id')
+            categories = body.get('categories')
+
+            if categories is None:
+                return jsonify({
+                    'status': 'Error',
+                    'message': 'O filme precisa ter uma categoria selecionada!'
+                }),400
 
             movie = Movie.query.filter_by(id=movie_id).first()
 
@@ -244,7 +276,20 @@ def edit_movie():
             movie.poster_img_id = movie.poster_img_id
             movie.launch_date = new_launch_date
             movie.running_time = new_running_time
-            movie.category_id = new_category_id
+
+            db.session.commit()
+
+            try:
+                MovieCategory.query.filter_by(movie_id=movie.id).delete()
+                db.session.commit()
+                #print("Registros deletados com sucesso!")
+            except Exception as e:
+                db.session.rollback()
+                print(f"Erro ao deletar registros: {e}")
+
+            for category in categories:
+                movie_category = MovieCategory(movie_id=movie.id, category_id=category)
+                db.session.add(movie_category)
 
             db.session.commit()
             db.session.close()
@@ -262,6 +307,7 @@ def edit_movie():
                     'error_class': str(error.__class__),
                     'error_cause': str(error.__cause__)
                 }),500
+        
                 
 @movie_route.route('/api/v1/like_movie', methods=['POST'])
 def like_movie():
@@ -282,6 +328,65 @@ def like_movie():
                 'message': 'filme curtido com sucesso!',
             }), 200
             
+        except Exception as error:
+                print_error_details(error)
+                return jsonify({
+                    'status': 'error',
+                    'message': 'An error has occurred!',
+                    'error_class': str(error.__class__),
+                    'error_cause': str(error.__cause__)
+                }),500
+        
+
+@movie_route.route('/api/v1/get_liked_movies', methods=['GET'])
+def get_liked_movies():
+    if request.method == 'GET':
+        try:
+            id = request.args.get('id')
+
+            liked_movie = Liked.query.filter_by(user_id=id).all()
+            liked_movie_schema = LikedSchema(many=True)
+            payload = liked_movie_schema.dump(liked_movie)
+
+            if payload is None:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Nenhum dado encontrado!'
+                }), 404
+
+            movies_by_id = {}
+            for item in payload:
+                movie_id = item['movie']['id']
+
+                if movie_id not in movies_by_id:
+                    movies_by_id[movie_id] = {
+                        **item['movie'],
+                        "user": item['user'],
+                        "categories": []
+                    }
+
+                    movies_by_id[movie_id]['user'].pop('banner_img_id')
+                    movies_by_id[movie_id]['user'].pop('profile_img_id')
+
+                category = MovieCategory.query.filter_by(movie_id=item['movie']['id'])
+                category_schema = MovieCategorySchema(many=True)
+                payload_category = category_schema.dump(category)
+
+                for category in payload_category:
+                    movies_by_id[movie_id]['categories'].append(category['category'])
+
+                    if len(movies_by_id[movie_id]['categories']) == 1:
+                        movies_by_id[movie_id]['banner_img'] = convert_image_to_base64(IMG_PATH, item['movie']['banner_img_id'])
+                        movies_by_id[movie_id]['poster_img'] = convert_image_to_base64(IMG_PATH, item['movie']['poster_img_id'])
+
+            movies_list = list(movies_by_id.values())
+
+            return jsonify({
+                'status': 'ok',
+                'message': 'filme encontrados com sucesso!',
+                'liked_movie': movies_list
+            }), 200
+    
         except Exception as error:
                 print_error_details(error)
                 return jsonify({
